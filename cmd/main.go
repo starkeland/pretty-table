@@ -6,37 +6,16 @@ import (
 )
 
 func main() {
-	table := prettyTable.NewTable(tableOption.ShowSeqColumn(), tableOption.ShowHR())
-	table.SetCaption("Hello, World!")
-	table.SetHeader([]string{"Name", "Age"})
+	table := prettyTable.NewTable(tableOption.Options{
+		// ShowSeqColumn: true,
+		ShowHR: true,
+	})
+	// table.SetCaption(" 配置信息")
+	table.SetHeader([]string{"配置项", "值"})
 	table.AddRows([][]string{
-		{"Alice", "20"},
-		{"Bob", "21"},
-		{"Charlie", "22"},
-		{"Dave", "23"},
-		{"Eve", "24"},
-		{"Frank", "25"},
-		{"Grace", "26"},
-		{"Heidi", "27"},
-		{"Ivan", "28"},
-		{"Judy", "29"},
-		{"Kevin", "30"},
-		{"Lily", "31"},
-		{"Mallory", "32"},
-		{"Nancy", "33"},
-		{"Oscar", "34"},
-		{"Peggy", "35"},
-		{"Quentin", "36"},
-		{"Ruth", "37"},
-		{"Steve", "38"},
-		{"Trent", "39"},
-		{"Uma", "40"},
-		{"Victor", "41"},
-		{"Wendy", "42"},
-		{"Xander", "43"},
-		{"Yvonne", "44"},
-		{"Zelda", "45"},
+		{"etcd", "etcd://10.59.15.13:2381,10.59.15.14:2381,10.59.15.15:2381/da.skylar"},
+		{"db", "mongo://admin:CVCPF7JUEbnTLr.1_ZAa1@10.59.15.13:27017,10.59.15.14:27017,10.59.15.15:27017/da_skylar_moss?alias=moss&authdb=admin&create_table=true"},
+		{"cache", "redis://:u39DHyOqkP23nt2P_ZAa1@10.59.15.13:16379,10.59.15.13:16380,10.59.15.14:16379,10.59.15.14:16380,10.59.15.15:16379,10.59.15.15:16380"},
 	}...)
-	table.SetFooter([]string{"Total", "63"})
 	table.Render()
 }

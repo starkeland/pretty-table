@@ -12,10 +12,9 @@ type Table interface {
 	Render()
 }
 
-func NewTable(options ...table.Option) Table {
-	t := &table.Table{}
-	for _, option := range options {
-		option(t)
+func NewTable(options table.Options) Table {
+	t := &table.Table{
+		Options: options,
 	}
 
 	return t

@@ -5,6 +5,7 @@ var BorderDefault = Border{
 	Top:             "-",
 	TopSeparator:    "+",
 	TopRight:        "+",
+	HeaderBottom:    "=",
 	HrLeft:          "+",
 	Hr:              "-",
 	HrSeparator:     "+",
@@ -21,6 +22,7 @@ var BorderLight = Border{
 	Top:             "─",
 	TopSeparator:    "┬",
 	TopRight:        "┐",
+	HeaderBottom:    "─",
 	HrLeft:          "├",
 	Hr:              "─",
 	HrSeparator:     "┼",
@@ -37,6 +39,7 @@ var BorderRound = Border{
 	Top:             "─",
 	TopSeparator:    "┬",
 	TopRight:        "╮",
+	HeaderBottom:    "─",
 	HrLeft:          "├",
 	Hr:              "─",
 	HrSeparator:     "┼",
@@ -53,6 +56,7 @@ var BorderBold = Border{
 	Top:             "━",
 	TopSeparator:    "┳",
 	TopRight:        "┓",
+	HeaderBottom:    "━",
 	HrLeft:          "┣",
 	Hr:              "━",
 	HrSeparator:     "╋",
@@ -69,6 +73,7 @@ var BorderDouble = Border{
 	Top:             "═",
 	TopSeparator:    "╦",
 	TopRight:        "╗",
+	HeaderBottom:    "═",
 	HrLeft:          "╠",
 	Hr:              "═",
 	HrSeparator:     "╬",
@@ -85,6 +90,8 @@ type Border struct {
 	Top          string
 	TopSeparator string
 	TopRight     string
+
+	HeaderBottom string
 
 	HrLeft      string
 	Hr          string

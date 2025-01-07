@@ -8,27 +8,15 @@ import (
 	"github.com/starkeland/pretty-table/style"
 )
 
-type Option func(*Table)
-
-func ShowSeqColumn() func(*Table) {
-	return func(t *Table) {
-		t.options.ShowSeqColumn = true
-	}
-}
-
-func ShowHR() func(*Table) {
-	return func(t *Table) {
-		t.options.ShowHR = true
-	}
-}
-
-type options struct {
+type Options struct {
+	// show sequence number in first column
 	ShowSeqColumn bool
-	ShowHR        bool
+	// show horizontal line between rows
+	ShowHR bool
 }
 
 type Table struct {
-	options options
+	Options Options
 	style   *style.TableStyle
 
 	caption string
@@ -91,7 +79,7 @@ func (t *Table) Style() *style.TableStyle {
 }
 
 func (t *Table) addSeqColumn() {
-	if !t.options.ShowSeqColumn {
+	if !t.Options.ShowSeqColumn {
 		return
 	}
 
@@ -168,22 +156,31 @@ func (t *Table) renderTopBorder() {
 }
 
 func (t *Table) renderHeader() {
-	if t.header.cells == nil {
+	if len(t.header.cells) == 0 || (t.Options.ShowSeqColumn && len(t.header.cells) == 1) {
 		return
 	}
 
 	t.printer.WriteString(t.Style().Border.RowSeparator)
 	for i, col := range t.header.cells {
-		t.printer.WriteString(col.Text(t.columnWidth[i]))
+		t.printer.WriteString(col.Render(t.columnWidth[i]))
 		t.printer.WriteString(t.Style().Border.RowSeparator)
 	}
 	t.printer.WriteString("\n")
 
-	t.renderHr()
+	t.printer.WriteString(t.Style().Border.HrLeft)
+	for i := 0; i < t.columnCount; i++ {
+		t.printer.WriteString(strings.Repeat(t.Style().Border.HeaderBottom, t.columnWidth[i]))
+		if i < t.columnCount-1 {
+			t.printer.WriteString(t.Style().Border.HrSeparator)
+		} else {
+			t.printer.WriteString(t.Style().Border.HrRight)
+		}
+	}
+	t.printer.WriteString("\n")
 }
 
 func (t *Table) renderHr() {
-	if t.options.ShowHR == false {
+	if t.Options.ShowHR == false {
 		return
 	}
 	t.printer.WriteString(t.Style().Border.HrLeft)
@@ -199,25 +196,27 @@ func (t *Table) renderHr() {
 }
 
 func (t *Table) renderRows() {
-	for _, row := range t.rows {
+	for i, row := range t.rows {
 		t.printer.WriteString(t.Style().Border.RowSeparator)
 		for i, col := range row.cells {
-			t.printer.WriteString(col.Text(t.columnWidth[i]))
+			t.printer.WriteString(col.Render(t.columnWidth[i]))
 			t.printer.WriteString(t.Style().Border.RowSeparator)
 		}
 		t.printer.WriteString("\n")
-		t.renderHr()
+		if i < len(t.rows)-1 {
+			t.renderHr()
+		}
 	}
 }
 
 func (t *Table) renderFooter() {
-	if t.footer.cells == nil {
+	if len(t.footer.cells) == 0 || (t.Options.ShowSeqColumn && len(t.footer.cells) == 1) {
 		return
 	}
 
 	t.printer.WriteString(t.Style().Border.RowSeparator)
 	for i, col := range t.footer.cells {
-		t.printer.WriteString(col.Text(t.columnWidth[i]))
+		t.printer.WriteString(col.Render(t.columnWidth[i]))
 		t.printer.WriteString(t.Style().Border.RowSeparator)
 	}
 	t.printer.WriteString("\n")
