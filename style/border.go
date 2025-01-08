@@ -1,6 +1,6 @@
 package style
 
-var BorderDefault = Border{
+var BorderDefault = &Border{
 	TopLeft:         "+",
 	Top:             "-",
 	TopSeparator:    "+",
@@ -17,7 +17,7 @@ var BorderDefault = Border{
 	BottomRight:     "+",
 }
 
-var BorderLight = Border{
+var BorderLight = &Border{
 	TopLeft:         "┌",
 	Top:             "─",
 	TopSeparator:    "┬",
@@ -34,7 +34,7 @@ var BorderLight = Border{
 	BottomRight:     "┘",
 }
 
-var BorderRound = Border{
+var BorderRound = &Border{
 	TopLeft:         "╭",
 	Top:             "─",
 	TopSeparator:    "┬",
@@ -51,7 +51,7 @@ var BorderRound = Border{
 	BottomRight:     "╯",
 }
 
-var BorderBold = Border{
+var BorderBold = &Border{
 	TopLeft:         "┏",
 	Top:             "━",
 	TopSeparator:    "┳",
@@ -68,7 +68,7 @@ var BorderBold = Border{
 	BottomSeparator: "┻",
 }
 
-var BorderDouble = Border{
+var BorderDouble = &Border{
 	TopLeft:         "╔",
 	Top:             "═",
 	TopSeparator:    "╦",

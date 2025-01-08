@@ -1,31 +1,34 @@
 package style
 
 var (
-	DefaultTableStyle  = &TableStyle{Border: BorderDefault}
-	DefaultColumnStyle = &ColumnStyle{}
-	DefaultRowStyle    = &RowStyle{}
-	DefaultCellStyle   = &CellStyle{}
-	DefaultHeaderStyle = &HeaderStyle{
-		CellStyle: CellStyle{},
-		ToUpper:   true,
+	DefaultTableStyle = &TableStyle{
+		Border: BorderDefault,
+		Caption: &CellStyle{
+			Align:     TextAlignCenter,
+			FgColor:   FgWhite,
+			BgColor:   BgBlue,
+			Bold:      true,
+			Italic:    true,
+			Underline: true,
+		},
+		Header: &CellStyle{
+			Align:   TextAlignLeft,
+			FgColor: FgBlue,
+			BgColor: BgCyan,
+			Bold:    true,
+		},
 	}
+	DefaultCellStyle = &CellStyle{}
 )
 
 type TableStyle struct {
-	Border Border // 边框样式
-}
-
-type HeaderStyle struct {
-	CellStyle
-	ToUpper bool
-}
-
-type ColumnStyle struct {
-	CellStyle
-}
-
-type RowStyle struct {
-	CellStyle
+	Border  *Border
+	Caption *CellStyle
+	Header  *CellStyle
+	Columns map[int]*CellStyle
+	Rows    map[int]*CellStyle
+	Cells   map[int]map[int]*CellStyle
+	Footer  *CellStyle
 }
 
 type CellStyle struct {
@@ -38,21 +41,22 @@ type CellStyle struct {
 }
 
 func (s *CellStyle) Apply(text string) string {
-	if s.Bold {
-		text += string(TextBold) + text + string(TextReset)
-	}
-	if s.Italic {
-		text += string(TextItalic) + text + string(TextReset)
-	}
-	if s.Underline {
-		text += string(TextUnderline) + text + string(TextReset)
-	}
 	if s.FgColor != "" {
 		text = string(s.FgColor) + text + string(FgReset)
 	}
 	if s.BgColor != "" {
 		text = string(s.BgColor) + text + string(BgReset)
 	}
+	if s.Bold {
+		text = string(TextBold) + text + string(TextReset)
+	}
+	if s.Italic {
+		text = string(TextItalic) + text + string(TextReset)
+	}
+	if s.Underline {
+		text = string(TextUnderline) + text + string(TextReset)
+	}
+
 	return text
 }
 

@@ -6,12 +6,12 @@ type Color string
 const (
 	FgReset   Color = "\033[0m"
 	FgRed           = "\033[31m"
-	FGGreen         = "\033[32m"
-	FGYellow        = "\033[33m"
-	FGBlue          = "\033[34m"
-	FGMagenta       = "\033[35m"
-	FGCyan          = "\033[36m"
-	FGWhite         = "\033[37m"
+	FgGreen         = "\033[32m"
+	FgYellow        = "\033[33m"
+	FgBlue          = "\033[34m"
+	FgMagenta       = "\033[35m"
+	FgCyan          = "\033[36m"
+	FgWhite         = "\033[37m"
 
 	BgReset   Color = "\033[0m"
 	BgRed           = "\033[41m"
