@@ -1,6 +1,6 @@
 package style
 
-var BorderDefault = &Border{
+var BorderASCII = Border{
 	TopLeft:         "+",
 	Top:             "-",
 	TopSeparator:    "+",
@@ -10,14 +10,14 @@ var BorderDefault = &Border{
 	Hr:              "-",
 	HrSeparator:     "+",
 	HrRight:         "+",
-	RowSeparator:    "|",
+	ColumnSeparator: "|",
 	BottomLeft:      "+",
 	Bottom:          "-",
 	BottomSeparator: "+",
 	BottomRight:     "+",
 }
 
-var BorderLight = &Border{
+var BorderLight = Border{
 	TopLeft:         "┌",
 	Top:             "─",
 	TopSeparator:    "┬",
@@ -27,7 +27,7 @@ var BorderLight = &Border{
 	Hr:              "─",
 	HrSeparator:     "┼",
 	HrRight:         "┤",
-	RowSeparator:    "│",
+	ColumnSeparator: "│",
 	BottomLeft:      "└",
 	Bottom:          "─",
 	BottomSeparator: "┴",
@@ -44,14 +44,14 @@ var BorderRound = &Border{
 	Hr:              "─",
 	HrSeparator:     "┼",
 	HrRight:         "┤",
-	RowSeparator:    "│",
+	ColumnSeparator: "│",
 	BottomLeft:      "╰",
 	Bottom:          "─",
 	BottomSeparator: "┴",
 	BottomRight:     "╯",
 }
 
-var BorderBold = &Border{
+var BorderBold = Border{
 	TopLeft:         "┏",
 	Top:             "━",
 	TopSeparator:    "┳",
@@ -61,14 +61,14 @@ var BorderBold = &Border{
 	Hr:              "━",
 	HrSeparator:     "╋",
 	HrRight:         "┫",
-	RowSeparator:    "┃",
+	ColumnSeparator: "┃",
 	BottomLeft:      "┗",
 	Bottom:          "━",
 	BottomRight:     "┛",
 	BottomSeparator: "┻",
 }
 
-var BorderDouble = &Border{
+var BorderDouble = Border{
 	TopLeft:         "╔",
 	Top:             "═",
 	TopSeparator:    "╦",
@@ -78,7 +78,7 @@ var BorderDouble = &Border{
 	Hr:              "═",
 	HrSeparator:     "╬",
 	HrRight:         "╣",
-	RowSeparator:    "║",
+	ColumnSeparator: "║",
 	BottomLeft:      "╚",
 	Bottom:          "═",
 	BottomSeparator: "╩",
@@ -98,7 +98,7 @@ type Border struct {
 	HrSeparator string
 	HrRight     string
 
-	RowSeparator string
+	ColumnSeparator string
 
 	BottomLeft      string
 	Bottom          string

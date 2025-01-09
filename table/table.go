@@ -2,7 +2,6 @@ package table
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/starkeland/pretty-table/style"
@@ -16,26 +15,21 @@ func ShowSeqColumn() Option {
 	}
 }
 
-func ShowHr() Option {
+func WithTableStyle(tableStyle *style.TableStyle) Option {
 	return func(t *Table) {
-		t.showHr = true
-	}
-}
-
-func WithStyle(tableStyle *style.TableStyle) Option {
-	return func(t *Table) {
-		t.style = tableStyle
+		if tableStyle != nil {
+			t.tableStyle = tableStyle
+		}
 	}
 }
 
 type Table struct {
 	showSeqColumn bool
-	showHr        bool
-	style         *style.TableStyle
+	tableStyle    *style.TableStyle
 
-	caption string
+	caption *Cell
 	header  []*Cell
-	rows    [][]*Cell
+	rows    []*Row
 	footer  []*Cell
 
 	printer     strings.Builder
@@ -45,7 +39,9 @@ type Table struct {
 }
 
 func (t *Table) SetCaption(caption string) {
-	t.caption = caption
+	if caption != "" {
+		t.caption = NewCell(caption)
+	}
 }
 
 func (t *Table) SetHeader(header []string) {
@@ -60,16 +56,41 @@ func (t *Table) SetFooter(footer []string) {
 	}
 }
 
-func (t *Table) AddRow(row []string) {
-	var cells []*Cell
-	for _, r := range row {
-		cells = append(cells, NewCell(r))
+func (t *Table) AddStringRow(stringRow []string) {
+	if len(stringRow) == 0 {
+		return
 	}
-	t.rows = append(t.rows, cells)
+	var row []*Cell
+	for _, cell := range stringRow {
+		row = append(row, NewCell(cell))
+	}
+	t.rows = append(t.rows, NewRow(row))
 }
 
-func (t *Table) SetStyle(s *style.TableStyle) {
-	t.style = s
+func (t *Table) AddStringRows(stringRows ...[]string) {
+	for _, row := range stringRows {
+		t.AddStringRow(row)
+	}
+}
+
+func (t *Table) AddRow(row *Row) {
+	if row != nil {
+		t.rows = append(t.rows, row)
+	}
+}
+
+func (t *Table) AddRows(rows ...*Row) {
+	for _, row := range rows {
+		t.AddRow(row)
+	}
+}
+
+func (t *Table) SetTableStyle(s *style.TableStyle) {
+	if s == nil {
+		t.tableStyle = style.DefaultTableStyle
+	} else {
+		t.tableStyle = s
+	}
 }
 
 func (t *Table) Render() {
@@ -88,34 +109,26 @@ func (t *Table) Render() {
 	t.printer.Reset()
 }
 
-func (t *Table) Style() *style.TableStyle {
-	if t.style == nil {
-		return style.DefaultTableStyle
-	}
-	return t.style
-}
-
 func (t *Table) addSeqColumn() {
 	if !t.showSeqColumn {
 		return
 	}
 
 	t.header = append([]*Cell{NewCell("#")}, t.header...)
-	for i, cells := range t.rows {
-		t.rows[i] = append([]*Cell{NewCell(strconv.Itoa(i + 1))}, cells...)
+	for i, row := range t.rows {
+		row.InsertSeqColumn(i + 1)
 	}
-
 	t.footer = append([]*Cell{NewCell("")}, t.footer...)
 }
 
 func (t *Table) initWidth() {
 	t.columnCount = len(t.header)
 	for _, row := range t.rows {
-		if len(row) > t.columnCount {
-			t.columnCount = len(row)
+		if len(row.cells) > t.columnCount {
+			t.columnCount = len(row.cells)
 		}
 
-		for i, cell := range row {
+		for i, cell := range row.cells {
 			if i >= len(t.columnWidth) {
 				t.columnWidth = append(t.columnWidth, cell.Width())
 			} else if cell.Width() > t.columnWidth[i] {
@@ -149,50 +162,55 @@ func (t *Table) initWidth() {
 	}
 }
 
+// cell style priority: column < row < cell
 func (t *Table) initCellStyle() {
-	for i, cellStyle := range t.style.Columns { // column style
-		for j := 0; j < len(t.rows); j++ { // every row
-			if i < len(t.rows[j]) {
-				t.rows[j][i].style = cellStyle
+	for i := 0; i < len(t.rows); i++ { // row
+		for j := 0; j < len(t.rows[i].cells); j++ { // column
+			if t.showSeqColumn && j == 0 {
+				continue
 			}
-		}
-	}
-	for i, cellStyle := range t.style.Rows {
-		if i < len(t.rows) {
-			for _, cell := range t.rows[i] {
-				cell.style = cellStyle
+			colStyle := t.tableStyle.Columns[j]
+			if t.showSeqColumn {
+				colStyle = t.tableStyle.Columns[j-1]
 			}
+			t.rows[i].cells[j].style = style.MergeCellStyles(colStyle, t.rows[i].style, t.rows[i].cells[j].style)
 		}
 	}
 }
 
 func (t *Table) renderCaption() {
-	if t.caption == "" {
+	if t.caption == nil {
 		return
 	}
 
-	text := strings.Repeat(" ", (t.tableWidth+t.columnCount+1-len(t.caption))/2) + t.caption
-	if captionStyle := t.Style().Caption; captionStyle != nil {
-		text = captionStyle.Apply(text)
+	if t.tableStyle.Caption != nil {
+		t.caption.style = t.tableStyle.Caption
 	}
 
-	t.printer.WriteString(text)
+	if t.tableStyle.HideBorder {
+		t.printer.WriteString(t.caption.Render(t.tableWidth))
+	} else {
+		t.printer.WriteString(t.caption.Render(t.tableWidth + t.columnCount + 1))
+	}
 	t.printer.WriteString("\n")
 }
 
 func (t *Table) renderTopBorder() {
+	if t.tableStyle.HideBorder {
+		return
+	}
 	if t.header == nil && len(t.rows) == 0 && t.footer == nil {
 		return
 	}
 
-	t.printer.WriteString(t.Style().Border.TopLeft)
+	t.printer.WriteString(t.tableStyle.Border.TopLeft)
 	for i := 0; i < t.columnCount; i++ {
-		t.printer.WriteString(strings.Repeat(t.Style().Border.Top, t.columnWidth[i]))
+		t.printer.WriteString(strings.Repeat(t.tableStyle.Border.Top, t.columnWidth[i]))
 		if i < t.columnCount-1 {
-			t.printer.WriteString(t.Style().Border.TopSeparator)
+			t.printer.WriteString(t.tableStyle.Border.TopSeparator)
 		}
 	}
-	t.printer.WriteString(t.Style().Border.TopRight)
+	t.printer.WriteString(t.tableStyle.Border.TopRight)
 	t.printer.WriteString("\n")
 }
 
@@ -201,36 +219,46 @@ func (t *Table) renderHeader() {
 		return
 	}
 
-	t.printer.WriteString(t.Style().Border.RowSeparator)
-	for i, col := range t.header {
-		t.printer.WriteString(col.Render(t.columnWidth[i]))
-		t.printer.WriteString(t.Style().Border.RowSeparator)
+	if !t.tableStyle.HideBorder {
+		t.printer.WriteString(t.tableStyle.Border.ColumnSeparator)
+	}
+
+	for i, cell := range t.header {
+		cell.style = t.tableStyle.Header
+		t.printer.WriteString(cell.Render(t.columnWidth[i]))
+		if !t.tableStyle.HideBorder {
+			t.printer.WriteString(t.tableStyle.Border.ColumnSeparator)
+		}
 	}
 	t.printer.WriteString("\n")
 
-	t.printer.WriteString(t.Style().Border.HrLeft)
+	if t.tableStyle.HideBorder {
+		return
+	}
+
+	t.printer.WriteString(t.tableStyle.Border.HrLeft)
 	for i := 0; i < t.columnCount; i++ {
-		t.printer.WriteString(strings.Repeat(t.Style().Border.HeaderBottom, t.columnWidth[i]))
+		t.printer.WriteString(strings.Repeat(t.tableStyle.Border.HeaderBottom, t.columnWidth[i]))
 		if i < t.columnCount-1 {
-			t.printer.WriteString(t.Style().Border.HrSeparator)
+			t.printer.WriteString(t.tableStyle.Border.HrSeparator)
 		} else {
-			t.printer.WriteString(t.Style().Border.HrRight)
+			t.printer.WriteString(t.tableStyle.Border.HrRight)
 		}
 	}
 	t.printer.WriteString("\n")
 }
 
 func (t *Table) renderHr() {
-	if t.showHr == false {
+	if t.tableStyle.HideBorder {
 		return
 	}
-	t.printer.WriteString(t.Style().Border.HrLeft)
+	t.printer.WriteString(t.tableStyle.Border.HrLeft)
 	for i := 0; i < t.columnCount; i++ {
-		t.printer.WriteString(strings.Repeat(t.Style().Border.Hr, t.columnWidth[i]))
+		t.printer.WriteString(strings.Repeat(t.tableStyle.Border.Hr, t.columnWidth[i]))
 		if i < t.columnCount-1 {
-			t.printer.WriteString(t.Style().Border.HrSeparator)
+			t.printer.WriteString(t.tableStyle.Border.HrSeparator)
 		} else {
-			t.printer.WriteString(t.Style().Border.HrRight)
+			t.printer.WriteString(t.tableStyle.Border.HrRight)
 		}
 	}
 	t.printer.WriteString("\n")
@@ -238,10 +266,14 @@ func (t *Table) renderHr() {
 
 func (t *Table) renderRows() {
 	for i, row := range t.rows {
-		t.printer.WriteString(t.Style().Border.RowSeparator)
-		for j, col := range row {
-			t.printer.WriteString(col.Render(t.columnWidth[j]))
-			t.printer.WriteString(t.Style().Border.RowSeparator)
+		if !t.tableStyle.HideBorder {
+			t.printer.WriteString(t.tableStyle.Border.ColumnSeparator)
+		}
+		for j, cell := range row.cells {
+			t.printer.WriteString(cell.Render(t.columnWidth[j]))
+			if !t.tableStyle.HideBorder {
+				t.printer.WriteString(t.tableStyle.Border.ColumnSeparator)
+			}
 		}
 		t.printer.WriteString("\n")
 		if i < len(t.rows)-1 {
@@ -255,22 +287,31 @@ func (t *Table) renderFooter() {
 		return
 	}
 
-	t.printer.WriteString(t.Style().Border.RowSeparator)
+	if !t.tableStyle.HideBorder {
+		t.printer.WriteString(t.tableStyle.Border.ColumnSeparator)
+	}
+
 	for i, cell := range t.footer {
 		t.printer.WriteString(cell.Render(t.columnWidth[i]))
-		t.printer.WriteString(t.Style().Border.RowSeparator)
+		if !t.tableStyle.HideBorder {
+			t.printer.WriteString(t.tableStyle.Border.ColumnSeparator)
+		}
 	}
 	t.printer.WriteString("\n")
 }
 
 func (t *Table) renderBottomBorder() {
-	t.printer.WriteString(t.Style().Border.BottomLeft)
+	if t.tableStyle.HideBorder {
+		return
+	}
+
+	t.printer.WriteString(t.tableStyle.Border.BottomLeft)
 	for i := 0; i < t.columnCount; i++ {
-		t.printer.WriteString(strings.Repeat(t.Style().Border.Bottom, t.columnWidth[i]))
+		t.printer.WriteString(strings.Repeat(t.tableStyle.Border.Bottom, t.columnWidth[i]))
 		if i < t.columnCount-1 {
-			t.printer.WriteString(t.Style().Border.BottomSeparator)
+			t.printer.WriteString(t.tableStyle.Border.BottomSeparator)
 		}
 	}
-	t.printer.WriteString(t.Style().Border.BottomRight)
+	t.printer.WriteString(t.tableStyle.Border.BottomRight)
 	t.printer.WriteString("\n")
 }

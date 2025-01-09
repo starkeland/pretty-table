@@ -7,12 +7,20 @@ import (
 )
 
 func main() {
-	t := prettyTable.NewTable(table.ShowSeqColumn(), table.ShowHr())
+	// t := prettyTable.NewTable()
+	t := prettyTable.NewTable(table.ShowSeqColumn())
 	t.SetCaption("配置信息")
 	t.SetHeader([]string{"配置项", "值"})
-	t.AddRow([]string{"mysql", "mysql://root:123456@127.0.0.1:3306"})
-	t.AddRow([]string{"redis", "redis://root:123456@127.0.0.1:6379"})
-	t.AddRow([]string{"etcd", "etcd://root:3acf823AICnqsLQc29ac:2379"})
-	t.SetStyle(style.DefaultTableStyle)
+	t.AddRows(
+		table.NewStringRow([]string{"mysql", "mysql://root:12345@127.0.0.1:3306"}),
+		table.NewRow([]*table.Cell{
+			table.NewCell("redis", table.WithCellStyle(&style.CellStyle{
+				FgColor: style.FgCyan,
+			})),
+			table.NewCell("redis://root:123456@127.0.0.1:6379"),
+		}),
+		table.NewStringRow([]string{"etcd", "etcd://root:3acf823AICnqsLQc29ac:2379"}),
+	)
+	t.SetTableStyle(style.DefaultTableStyle)
 	t.Render()
 }
