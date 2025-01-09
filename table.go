@@ -8,15 +8,18 @@ import (
 type Table interface {
 	SetCaption(caption string)
 	SetHeader(header []string)
-	AddRow(row []string)
+	AddStringRow(row []string)
+	AddStringRows(rows ...[]string)
+	AddRow(row *table.Row)
+	AddRows(rows ...*table.Row)
 	SetFooter(footer []string)
-	SetStyle(s *style.TableStyle)
+	SetTableStyle(tableStyle *style.TableStyle)
 	Render()
 }
 
 func NewTable(options ...table.Option) Table {
 	t := &table.Table{}
-	t.SetStyle(style.DefaultTableStyle)
+	t.SetTableStyle(style.DefaultTableStyle)
 	for _, option := range options {
 		option(t)
 	}
